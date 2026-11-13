@@ -26,7 +26,8 @@ public class Main {
             System.out.println("3 - Entrada de estoque");
             System.out.println("4 - Saída de estoque");
             System.out.println("5 - Buscar produto");
-            System.out.println("6 - Sair");
+            System.out.println("6 - Editar produto");
+            System.out.println("7 - Sair");
 
             System.out.print("Escolha uma opção: ");
             String opcao = scanner.nextLine();
@@ -53,8 +54,12 @@ public class Main {
                 case "5":
                     buscarProduto(scanner, produtos);
                     break;
-
+                    
                 case "6":
+                    editarProduto(scanner, produtos);
+                    break;
+
+                case "7":
                     sistemaAtivo = false;
                     System.out.println("Saindo do sistema. Até logo!");
                     break;
@@ -141,13 +146,19 @@ public class Main {
             }
         }
 
-        // Cria um novo objeto Produto
-        Produto produto = new Produto(nome, preco, quantidade);
+        try {
+            // Cria um novo objeto Produto
+            Produto produto = new Produto(nome, preco, quantidade);
 
-        // Adiciona o produto à lista
-        produtos.add(produto);
+            // Adiciona o produto à lista
+            produtos.add(produto);
 
-        System.out.println("Produto cadastrado com sucesso!");
+            System.out.println("Produto cadastrado com sucesso!");
+
+        } catch (IllegalArgumentException e) {
+
+            System.out.println("Erro ao cadastrar produto: " + e.getMessage());
+        }
     }
 
 
@@ -335,6 +346,90 @@ public class Main {
 
             System.out.println("=========================================");
         }
+    }
+
+
+    // ============================================
+    // Método para editar os dados de um produto
+    // ============================================
+    public static void editarProduto(
+            Scanner scanner, ArrayList<Produto> produtos) {
+
+        // 1. Verifica se existem produtos cadastrados
+        if (produtos.isEmpty()) {
+            System.out.println("Nenhum produto cadastrado.");
+            return;
+        }
+
+        // 2. Localiza o produto informado pelo usuário
+        Produto produto = localizarProduto(scanner, produtos);
+
+        // Verifica se o produto foi encontrado
+        if (produto == null) {
+            System.out.println("Produto não encontrado.");
+            return;
+        }
+
+        System.out.println("\nEditando o produto: " + produto.getNome());
+        System.out.println("(Pressione [Enter] sem digitar nada para manter o valor atual)\n");
+
+        // Guardar os valores atuais do produto como padrão inicial
+        String nomeAtualizado = produto.getNome();
+        double precoAtualizado = produto.getPreco();
+
+        // ----------------------------------------
+        // 3. Edição do Nome
+        // ----------------------------------------
+        System.out.print("Novo nome [" + produto.getNome() + "]: ");
+        String novoNome = scanner.nextLine().trim();
+
+        if (!novoNome.isEmpty()) {
+            nomeAtualizado = novoNome;
+        }
+
+        // ----------------------------------------
+        // 4. Edição do Preço
+        // ----------------------------------------
+        boolean precoValido = false;
+
+        while (!precoValido) {
+            System.out.print("Novo preço [R$ " + produto.getPreco() + "]: ");
+            String precoInput = scanner.nextLine().trim();
+
+            // Se o usuário apenas der Enter, mantemos o preço atual
+            if (precoInput.isEmpty()) {
+                precoValido = true;
+            } else {
+                try {
+                    double novoPreco = Double.parseDouble(precoInput);
+
+                    if (Double.isFinite(novoPreco) && novoPreco > 0) {
+                        precoAtualizado = novoPreco;
+                        precoValido = true;
+                    } else {
+                        System.out.println("O preço deve ser maior que zero.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Entrada inválida. Digite um preço válido ou dê Enter para manter.");
+                }
+            }
+        }
+
+        // -----------------------------------------------
+        // Atualização somente após a validação das informações
+        // -----------------------------------------------
+        try {
+            produto.setNome(nomeAtualizado);
+            produto.setPreco(precoAtualizado);
+            System.out.println("\nProduto atualizado com sucesso!");
+        } catch (IllegalArgumentException e) {
+            System.out.println("\nNão foi possível atualizar o produto: " + e.getMessage());
+        }
+
+        // 5. Exibe os dados finais atualizados
+        System.out.println("--- Dados do Produto ---");
+        produto.exibirInformacoes();
+        System.out.println("------------------------");
     }
 
 }

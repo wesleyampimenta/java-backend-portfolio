@@ -50,49 +50,40 @@ public class Produto {
 
 
     // ============================================
-    // Métodos Setters
+    // Métodos Setters com Exceções de Domínio
     // ============================================
 
     // Define o nome do produto
     public void setNome(String nome) {
 
         // Verifica se o nome não é nulo ou vazio
-        if (nome != null && !nome.trim().isEmpty()) {
-
-            this.nome = nome.trim();
-
-        } else {
-
-            System.out.println("Nome não pode ser nulo ou vazio.");
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("O nome do produto não pode ser nulo ou vazio.");
         }
+
+        this.nome = nome.trim();
     }
 
     // Define o preço do produto
     public void setPreco(double preco) {
 
-        // O preço deve ser maior que zero
-        if (Double.isFinite(preco) && preco > 0) {
-
-            this.preco = preco;
-
-        } else {
-
-            System.out.println("Preço deve ser maior que zero.");
+        // O preço deve ser finito e maior que zero
+        if (!Double.isFinite(preco) || preco <= 0) {
+            throw new IllegalArgumentException("O preço do produto deve ser maior que zero.");
         }
+
+        this.preco = preco;
     }
 
     // Define a quantidade do produto
     public void setQuantidade(int quantidade) {
 
         // A quantidade não pode ser negativa
-        if (quantidade >= 0) {
-
-            this.quantidade = quantidade;
-
-        } else {
-
-            System.out.println("Quantidade não pode ser negativa.");
+        if (quantidade < 0) {
+            throw new IllegalArgumentException("A quantidade do produto não pode ser negativa.");
         }
+
+        this.quantidade = quantidade;
     }
 
 
