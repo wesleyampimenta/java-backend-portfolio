@@ -1,5 +1,5 @@
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
 
         // Lista para armazenar os produtos cadastrados
-        ArrayList<Produto> produtos = new ArrayList<>();
+        ProdutoService produtoService = new ProdutoService();
 
         // Scanner para ler a entrada do usuário
         Scanner scanner = new Scanner(System.in);
@@ -36,27 +36,27 @@ public class Main {
             switch (opcao) {
 
                 case "1":
-                    cadastrarProduto(scanner, produtos);
+                    cadastrarProduto(scanner, produtoService);
                     break;
 
                 case "2":
-                    listarProdutos(produtos);
+                    listarProdutos(produtoService);
                     break;
 
                 case "3":
-                    entradaEstoque(scanner, produtos);
+                    entradaEstoque(scanner, produtoService);
                     break;
 
                 case "4":
-                    saidaEstoque(scanner, produtos);
+                    saidaEstoque(scanner, produtoService);
                     break;
 
                 case "5":
-                    buscarProduto(scanner, produtos);
+                    buscarProduto(scanner, produtoService);
                     break;
                     
                 case "6":
-                    editarProduto(scanner, produtos);
+                    editarProduto(scanner, produtoService);
                     break;
 
                 case "7":
@@ -78,7 +78,7 @@ public class Main {
     // Método para cadastrar um produto
     // ============================================
     public static void cadastrarProduto(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // Solicita o nome do produto
         System.out.print("Digite o nome do produto: ");
@@ -151,7 +151,7 @@ public class Main {
             Produto produto = new Produto(nome, preco, quantidade);
 
             // Adiciona o produto à lista
-            produtos.add(produto);
+            produtoService.cadastrarProduto(produto);
 
             System.out.println("Produto cadastrado com sucesso!");
 
@@ -165,16 +165,19 @@ public class Main {
     // ============================================
     // Método para listar os produtos cadastrados
     // ============================================
-    public static void listarProdutos(ArrayList<Produto> produtos) {
+    public static void listarProdutos(ProdutoService produtoService) {
 
         // Verifica se existem produtos cadastrados
-        if (produtos.isEmpty()) {
+        if (produtoService.estaVazio()) {
 
             System.out.println("Nenhum produto cadastrado.");
 
         } else {
 
             System.out.println("========== LISTA DE PRODUTOS ==========");
+
+            // Obtém os produtos através do serviço (lista protegida para somente leitura)
+            List<Produto> produtos = produtoService.listarProdutos();
 
             // Percorre a lista e apresenta os produtos
             for (Produto produto : produtos) {
@@ -190,24 +193,14 @@ public class Main {
     // Método para localizar um produto pelo nome
     // ============================================
     public static Produto localizarProduto(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // Solicita o nome do produto que será procurado
         System.out.print("Digite o nome do produto: ");
         String nome = scanner.nextLine().trim();
 
-        // Percorre a lista procurando o produto
-        for (Produto produto : produtos) {
-
-            // Compara os nomes ignorando maiúsculas e minúsculas
-            if (produto.getNome().equalsIgnoreCase(nome)) {
-
-                return produto;
-            }
-        }
-
-        // Retorna null quando não encontra o produto
-        return null;
+        // Solicita ao serviço que procure o produto
+        return produtoService.buscarPorNome(nome);
     }
 
 
@@ -246,17 +239,17 @@ public class Main {
     // Método para registrar entrada de estoque
     // ============================================
     public static void entradaEstoque(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // Verifica se existem produtos cadastrados
-        if (produtos.isEmpty()) {
+        if (produtoService.estaVazio()) {
 
             System.out.println("Nenhum produto cadastrado.");
             return;
         }
 
         // Localiza o produto informado pelo usuário
-        Produto produto = localizarProduto(scanner, produtos);
+        Produto produto = localizarProduto(scanner, produtoService);
 
         // Verifica se o produto foi encontrado
         if (produto == null) {
@@ -271,11 +264,19 @@ public class Main {
         // Solicita a quantidade que será adicionada
         int quantidadeEntrada = lerQuantidadePositiva(scanner);
 
-        // Adiciona a quantidade ao estoque
-        produto.adicionarEstoque(quantidadeEntrada);
+        // Delega a entrada de estoque para o serviço
+        try {
+            boolean sucesso = produtoService.adicionarEstoque(produto.getNome(), quantidadeEntrada);
 
-        // Exibe o estoque atualizado
-        System.out.println("Estoque atualizado: " + produto.getQuantidade());
+            if (sucesso) {
+                System.out.println("Entrada de estoque realizada com sucesso!");
+                System.out.println("Estoque atualizado: " + produto.getQuantidade());
+            } else {
+                System.out.println("Não foi possível adicionar: quantidade excede o limite máximo permitido.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Falha na entrada de estoque: " + e.getMessage());
+        }
     }
 
 
@@ -283,17 +284,17 @@ public class Main {
     // Método para registrar saída de estoque
     // ============================================
     public static void saidaEstoque(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // Verifica se existem produtos cadastrados
-        if (produtos.isEmpty()) {
+        if (produtoService.estaVazio()) {
 
             System.out.println("Nenhum produto cadastrado.");
             return;
         }
 
         // Localiza o produto informado pelo usuário
-        Produto produto = localizarProduto(scanner, produtos);
+        Produto produto = localizarProduto(scanner, produtoService);
 
         // Verifica se o produto foi encontrado
         if (produto == null) {
@@ -308,11 +309,20 @@ public class Main {
         // Solicita a quantidade que será retirada
         int quantidadeSaida = lerQuantidadePositiva(scanner);
 
-        // Remove a quantidade do estoque
-        produto.removerEstoque(quantidadeSaida);
+        // Delega a saída de estoque para o serviço
+        try {
+            boolean sucesso = produtoService.removerEstoque(produto.getNome(), quantidadeSaida);
 
-        // Exibe o estoque atualizado
-        System.out.println("Estoque atualizado: " + produto.getQuantidade());
+            if (sucesso) {
+                System.out.println("Saída de estoque realizada com sucesso!");
+                System.out.println("Estoque atualizado: " + produto.getQuantidade());
+            } else {
+                System.out.println("Não foi possível realizar a saída: estoque insuficiente (disponível: "
+                        + produto.getQuantidade() + ").");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Falha na saída de estoque: " + e.getMessage());
+        }
     }
 
 
@@ -320,17 +330,17 @@ public class Main {
     // Método para buscar e apresentar um produto
     // ============================================
     public static void buscarProduto(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // Verifica se existem produtos cadastrados
-        if (produtos.isEmpty()) {
+        if (produtoService.estaVazio()) {
 
             System.out.println("Nenhum produto cadastrado.");
             return;
         }
 
         // Localiza o produto informado pelo usuário
-        Produto produto = localizarProduto(scanner, produtos);
+        Produto produto = localizarProduto(scanner, produtoService);
 
         // Verifica se o produto foi encontrado
         if (produto == null) {
@@ -353,16 +363,16 @@ public class Main {
     // Método para editar os dados de um produto
     // ============================================
     public static void editarProduto(
-            Scanner scanner, ArrayList<Produto> produtos) {
+            Scanner scanner, ProdutoService produtoService) {
 
         // 1. Verifica se existem produtos cadastrados
-        if (produtos.isEmpty()) {
+        if (produtoService.estaVazio()) {
             System.out.println("Nenhum produto cadastrado.");
             return;
         }
 
         // 2. Localiza o produto informado pelo usuário
-        Produto produto = localizarProduto(scanner, produtos);
+        Produto produto = localizarProduto(scanner, produtoService);
 
         // Verifica se o produto foi encontrado
         if (produto == null) {
@@ -416,20 +426,20 @@ public class Main {
         }
 
         // -----------------------------------------------
-        // Atualização somente após a validação das informações
+        // Atualização delegada para o serviço
         // -----------------------------------------------
         try {
-            produto.setNome(nomeAtualizado);
-            produto.setPreco(precoAtualizado);
+            produtoService.atualizarProduto(produto.getNome(), nomeAtualizado, precoAtualizado);
             System.out.println("\nProduto atualizado com sucesso!");
+
+            // Exibição dos dados somente em caso de sucesso
+            System.out.println("--- Dados do Produto ---");
+            produto.exibirInformacoes();
+            System.out.println("------------------------");
+
         } catch (IllegalArgumentException e) {
             System.out.println("\nNão foi possível atualizar o produto: " + e.getMessage());
         }
-
-        // 5. Exibe os dados finais atualizados
-        System.out.println("--- Dados do Produto ---");
-        produto.exibirInformacoes();
-        System.out.println("------------------------");
     }
 
 }

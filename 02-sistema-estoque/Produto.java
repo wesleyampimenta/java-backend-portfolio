@@ -91,26 +91,16 @@ public class Produto {
     // Método para adicionar estoque
     // ============================================
 
-    public void adicionarEstoque(int quantidadeEntrada) {
+    public boolean adicionarEstoque(int quantidadeEntrada) {
 
-        // Verifica se a quantidade informada é positiva
-        if (quantidadeEntrada <= 0) {
-
-            System.out.println("A entrada deve ser maior que zero.");
-            return;
-        }
-
-        // Verifica se a soma ultrapassaria o limite de um int
-        if (quantidadeEntrada > Integer.MAX_VALUE - quantidade) {
-
-            System.out.println("Não foi possível adicionar: quantidade excede o limite.");
-            return;
+        // Verifica se a quantidade informada é positiva e não estoura o limite
+        if (quantidadeEntrada <= 0 || quantidadeEntrada > Integer.MAX_VALUE - quantidade) {
+            return false;
         }
 
         // Adiciona a quantidade ao estoque atual
         quantidade += quantidadeEntrada;
-
-        System.out.println("Entrada de estoque realizada com sucesso!");
+        return true;
     }
 
 
@@ -118,26 +108,16 @@ public class Produto {
     // Método para remover estoque
     // ============================================
 
-    public void removerEstoque(int quantidadeSaida) {
+    public boolean removerEstoque(int quantidadeSaida) {
 
-        // Verifica se a quantidade informada é positiva
-        if (quantidadeSaida <= 0) {
-
-            System.out.println("A saída deve ser maior que zero.");
-            return;
-        }
-
-        // Verifica se existe estoque suficiente
-        if (quantidadeSaida > quantidade) {
-
-            System.out.println("Estoque insuficiente!");
-            return;
+        // Verifica se a quantidade informada é positiva e se há estoque suficiente
+        if (quantidadeSaida <= 0 || quantidadeSaida > quantidade) {
+            return false;
         }
 
         // Subtrai a quantidade do estoque atual
         quantidade -= quantidadeSaida;
-
-        System.out.println("Saída de estoque realizada com sucesso!");
+        return true;
     }
 
 
